@@ -5,32 +5,36 @@ local function path_hd(path)
 end
 
 function M.dig(table, path)
-	if not table or type(table) ~= "table" then
-		return table
+	local head, tail
+
+	while table and type(table) == "table" do
+		head, tail = path_hd(path)
+		table = table[head]
+		path = tail
 	end
 
-	local head, tail = path_hd(path)
-
-	return M.dig(table[head], tail)
+	return table
 end
 
 function M.place(table, path, value)
 	local head, tail = path_hd(path)
 
-	if tail == "" then
-		table[head] = value
-		return
+	while tail ~= "" do
+		if not table[head] then
+			table[head] = {}
+		end
+
+		if type(table[head]) ~= "table" then
+			error("Attempt to overwrite " .. path .. " with a table")
+		end
+
+		table = table[head]
+		path = tail
+
+		head, tail = path_hd(path)
 	end
 
-	if not table[head] then
-		table[head] = {}
-	end
-
-	if type(table[head]) ~= "table" then
-		error("Attempt to overwrite existing string with an object")
-	end
-
-	return M.place(table[head], tail, value)
+	table[head] = value
 end
 
 local translations = {
